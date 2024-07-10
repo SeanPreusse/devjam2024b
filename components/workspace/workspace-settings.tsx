@@ -5,6 +5,7 @@ import {
   uploadWorkspaceImage
 } from "@/db/storage/workspace-images"
 import { updateWorkspace } from "@/db/workspaces"
+import { getTeamMembersQuery } from "@/db/members"
 import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 import { LLMID } from "@/types"
 import { IconHome, IconSettings } from "@tabler/icons-react"
@@ -27,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { TextareaAutosize } from "../ui/textarea-autosize"
 import { WithTooltip } from "../ui/with-tooltip"
 import { DeleteWorkspace } from "./delete-workspace"
+import { DataTable } from "@/components/workspace/workspace-members"
 
 interface WorkspaceSettingsProps {}
 
@@ -42,7 +44,6 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
   } = useContext(ChatbotUIContext)
 
   const buttonRef = useRef<HTMLButtonElement>(null)
-
   const [isOpen, setIsOpen] = useState(false)
 
   const [name, setName] = useState(selectedWorkspace?.name || "")
@@ -164,6 +165,37 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
 
   if (!selectedWorkspace || !profile) return null
 
+  const [teamMembers, setTeamMembers] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTeamMembersAndUser = async () => {
+      setLoading(true);
+      try {
+        // Assuming selectedWorkspace is available and contains the teamId
+        const teamId = selectedWorkspace?.team_id;
+        if (teamId) {
+          const teamMembersData = await getTeamMembersQuery(teamId);
+          setTeamMembers(teamMembersData);
+        }
+        // Assuming getCurrentUser is a function that fetches the current user's data
+        const currentUserData = await getCurrentUser();
+        setCurrentUser(currentUserData);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeamMembersAndUser();
+  }, [selectedWorkspace]); // Re-run when selectedWorkspace changes
+
+
+
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -199,9 +231,10 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
           </SheetHeader>
 
           <Tabs defaultValue="main">
-            <TabsList className="mt-4 grid w-full grid-cols-2">
+            <TabsList className="mt-4 grid w-full grid-cols-3">
               <TabsTrigger value="main">Main</TabsTrigger>
               <TabsTrigger value="defaults">Defaults</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
             </TabsList>
 
             <TabsContent className="mt-4 space-y-4" value="main">
@@ -216,7 +249,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
                   />
                 </div>
 
-                {/* <div className="space-y-1">
+                <div className="space-y-1">
                   <Label>Description</Label>
 
                   <Input
@@ -224,7 +257,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                   />
-                </div> */}
+                </div>
 
                 <div className="space-y-1">
                   <Label>Workspace Image</Label>
@@ -270,6 +303,27 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
                 chatSettings={defaultChatSettings as any}
                 onChangeChatSettings={setDefaultChatSettings}
               />
+            </TabsContent>
+
+            <TabsContent value="members">
+              <Tabs>
+              <TabsList className="bg-transparent border-b-[1px] w-full justify-start rounded-none mb-1 p-0 h-auto pb-4 mt-4">
+                <TabsTrigger value="members" className="p-0 m-0 mr-4">
+                  Team Members
+                </TabsTrigger>
+                <TabsTrigger value="pending" className="p-0 m-0">
+                  Pending Invitations
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="members">
+                <DataTable data={teamMembers?.data} currentUser={user?.data} />
+              </TabsContent>
+
+              <TabsContent value="pending">
+                {/* Content for Pending Invitations */}
+              </TabsContent>
+              </Tabs>
             </TabsContent>
           </Tabs>
         </div>

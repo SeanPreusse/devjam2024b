@@ -4,7 +4,7 @@ import { AssistantPicker } from "./assistant-picker"
 import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 import { FilePicker } from "./file-picker"
 import { PromptPicker } from "./prompt-picker"
-import { ToolPicker } from "./tool-picker"
+// import { ToolPicker } from "./tool-picker"
 
 interface ChatCommandInputProps {}
 
@@ -40,7 +40,7 @@ export const ChatCommandInput: FC<ChatCommandInputProps> = ({}) => {
         isFocused={focusFile}
       />
 
-      <ToolPicker />
+      {/* <ToolPicker /> */}
 
       <AssistantPicker />
     </>
