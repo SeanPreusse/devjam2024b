@@ -43,20 +43,19 @@ export const createProfile = async (profile: TablesInsert<"profiles">) => {
 }
 
 export const updateProfile = async (
-  profileId: string,
+  userId: string,
   profile: TablesUpdate<"profiles">
 ) => {
   const { data: updatedProfile, error } = await supabase
     .from("profiles")
     .update(profile)
-    .eq("id", profileId)
+    .eq("user_id", userId)
     .select("*")
     .single()
 
   if (error) {
     throw new Error(error.message)
   }
-
   return updatedProfile
 }
 

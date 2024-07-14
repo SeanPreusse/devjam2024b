@@ -1,9 +1,7 @@
-"use client";
-
 // import { changeUserRoleAction } from "@/actions/change-user-role-action";
 // import { deleteTeamMemberAction } from "@/actions/delete-team-member-action";
 // import { leaveTeamAction } from "@/actions/leave-team-action";
-// import { InviteTeamMembersModal } from "@/components/modals/invite-team-members-modal";
+import { InviteTeamMembersModal } from "@/components/models/invite-team-members-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,31 +43,38 @@ import { MoreHorizontal } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
-import * as React from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { getTeamMembersQuery } from "@/db/members"
+
+
+
 
 export const columns: ColumnDef[] = [
   {
     id: "member",
-    accessorKey: "user.full_name",
+    accessorKey: "user.display_name",
     header: () => "Select all",
-    cell: ({ row }) => {
+    cell: ({ row }) => {    
+      // Fallback text if display_name is missing
+      const displayName = row.original.profile?.display_name || "Not available";
+    
       return (
         <div>
           <div className="flex items-center space-x-4">
             <Avatar className="rounded-full w-8 h-8">
-              <AvatarImage src={row.original.user?.avatar_url} />
+              <AvatarImage src={row.original.profile?.image_url} />
               <AvatarFallback>
                 <span className="text-xs">
-                  {row.original.user?.full_name?.charAt(0)?.toUpperCase()}
+                  {displayName.charAt(0).toUpperCase()}
                 </span>
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <span className="font-medium text-sm">
-                {row.original.user?.full_name}
+                {displayName}
               </span>
               <span className="text-sm text-[#606060]">
-                {row.original.user?.email}
+                {row.original.profile?.email}
               </span>
             </div>
           </div>
@@ -80,60 +85,59 @@ export const columns: ColumnDef[] = [
   {
     id: "actions",
     cell: ({ row, table }) => {
-      const t = useI18n();
       const router = useRouter();
       const { toast } = useToast();
 
-      const changeUserRole = useAction(changeUserRoleAction, {
-        onSuccess: () =>
-          toast({
-            title: "Team role has been updated.",
-            duration: 3500,
-            variant: "success",
-          }),
-        onError: () => {
-          toast({
-            duration: 3500,
-            variant: "error",
-            title: "Something went wrong pleaase try again.",
-          });
-        },
-      });
+      // const changeUserRole = useAction(changeUserRoleAction, {
+      //   onSuccess: () =>
+      //     toast({
+      //       title: "Team role has been updated.",
+      //       duration: 3500,
+      //       variant: "success",
+      //     }),
+      //   onError: () => {
+      //     toast({
+      //       duration: 3500,
+      //       variant: "error",
+      //       title: "Something went wrong pleaase try again.",
+      //     });
+      //   },
+      // });
 
-      const deleteTeamMember = useAction(deleteTeamMemberAction, {
-        onSuccess: () =>
-          toast({
-            title: "Team member removed.",
-            duration: 3500,
-            variant: "success",
-          }),
-        onError: () => {
-          toast({
-            duration: 3500,
-            variant: "error",
-            title: "Something went wrong pleaase try again.",
-          });
-        },
-      });
+      // const deleteTeamMember = useAction(deleteTeamMemberAction, {
+      //   onSuccess: () =>
+      //     toast({
+      //       title: "Team member removed.",
+      //       duration: 3500,
+      //       variant: "success",
+      //     }),
+      //   onError: () => {
+      //     toast({
+      //       duration: 3500,
+      //       variant: "error",
+      //       title: "Something went wrong pleaase try again.",
+      //     });
+      //   },
+      // });
 
-      const leaveTeam = useAction(leaveTeamAction, {
-        onSuccess: () => router.push("/teams"),
-        onError: () => {
-          toast({
-            duration: 3500,
-            variant: "error",
-            title:
-              "You cannot leave since you are the only remaining owner of the team. Delete this team instead.",
-          });
-        },
-      });
+      // const leaveTeam = useAction(leaveTeamAction, {
+      //   onSuccess: () => router.push("/teams"),
+      //   onError: () => {
+      //     toast({
+      //       duration: 3500,
+      //       variant: "error",
+      //       title:
+      //         "You cannot leave since you are the only remaining owner of the team. Delete this team instead.",
+      //     });
+      //   },
+      // });
 
       return (
         <div className="flex justify-end">
           <div className="flex space-x-2 items-center">
             {(table.options.meta.currentUser.role === "owner" &&
               table.options.meta.currentUser.user.id !==
-                row.original.user?.id) ||
+                row.original.user_id) ||
             (table.options.meta.currentUser.role === "owner" &&
               table.options.meta.totalOwners > 1) ? (
               <Select
@@ -141,7 +145,7 @@ export const columns: ColumnDef[] = [
                 onValueChange={(role) => {
                   changeUserRole.execute({
                     userId: row.original.user?.id,
-                    teamId: row.original.team_id,
+                    workspaceId: row.original.workspace_id,
                     role,
                     revalidatePath: "/settings/members",
                   });
@@ -157,7 +161,7 @@ export const columns: ColumnDef[] = [
               </Select>
             ) : (
               <span className="text-sm text-[#606060]">
-                {t(`roles.${row.original.role}`)}
+                {row.original.role}
               </span>
             )}
 
@@ -170,7 +174,7 @@ export const columns: ColumnDef[] = [
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {table.options.meta.currentUser.user.id !==
-                    row.original.user?.id && (
+                    row.original.user_id && (
                     <AlertDialog>
                       <DropdownMenuItem
                         className="text-destructive"
@@ -195,8 +199,8 @@ export const columns: ColumnDef[] = [
                             disabled={deleteTeamMember.status === "executing"}
                             onClick={() =>
                               deleteTeamMember.execute({
-                                userId: row.original.user?.id,
-                                teamId: row.original.team_id,
+                                userId: row.original.user_id,
+                                workspaceId: row.original.workspace_id,
                                 revalidatePath: "/settings/members",
                               })
                             }
@@ -213,7 +217,7 @@ export const columns: ColumnDef[] = [
                   )}
 
                   {table.options.meta.currentUser.user.id ===
-                    row.original.user?.id && (
+                    row.original.user_id && (
                     <AlertDialog>
                       <DropdownMenuItem
                         className="text-destructive"
@@ -240,7 +244,7 @@ export const columns: ColumnDef[] = [
                             disabled={leaveTeam.status === "executing"}
                             onClick={() =>
                               leaveTeam.execute({
-                                teamId: row.original.team_id,
+                                workspaceId: row.original.workspace_id,
                                 role: row.original.role,
                               })
                             }
@@ -268,17 +272,29 @@ export const columns: ColumnDef[] = [
   },
 ];
 
-export function DataTable({ data, currentUser }) {
-  const [isOpen, onOpenChange] = React.useState(false);
+export function DataTable({ workspaceId, currentUser }) {
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [isOpen, onOpenChange] = useState(false);
+
+  // useCallback to memoize fetchData function
+  const fetchData = useCallback(async () => {
+    const data = await getTeamMembersQuery(workspaceId);
+    setTeamMembers(data.data);
+    console.log(data)
+  }, [workspaceId]); // Dependency array, fetchData is recreated if workspaceId changes
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]); // Dependency array, re-fetch if fetchData function changes
 
   const table = useReactTable({
     getRowId: (row) => row.id,
-    data,
+    data: teamMembers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: {
       currentUser,
-      totalOwners: data.filter((member) => member.role === "owner").length,
+      totalOwners: teamMembers ? teamMembers.filter((member) => member.role === "owner").length : 0,
     },
   });
 
@@ -299,7 +315,7 @@ export function DataTable({ data, currentUser }) {
         />
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
           <Button onClick={() => onOpenChange(true)}>Invite member</Button>
-          <InviteTeamMembersModal onOpenChange={onOpenChange} isOpen={isOpen} />
+          <InviteTeamMembersModal onOpenChange={onOpenChange} isOpen={isOpen} currentUser={currentUser} />
         </Dialog>
       </div>
       <Table>

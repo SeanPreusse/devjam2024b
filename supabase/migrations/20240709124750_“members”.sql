@@ -13,7 +13,7 @@ CREATE TABLE users_on_team (
     id bigint primary key generated always as identity,
     role workspaceRoles,
     workspace_id UUID NOT NULL REFERENCES public.workspaces(id),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
     created_at timestamp with time zone not null default now()
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE user_invites (
     code TEXT,
     created_at timestamp with time zone not null default now(),
     email TEXT,
-    invited_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    invited_by UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
     role workspaceRoles,
     workspace_id UUID NOT NULL REFERENCES public.workspaces(id)
 );
@@ -46,3 +46,7 @@ CREATE TRIGGER before_insert_user_invites
 BEFORE INSERT ON user_invites
 FOR EACH ROW
 EXECUTE FUNCTION generate_invite_code();
+
+
+ALTER TABLE profiles
+ADD COLUMN home_workspace UUID REFERENCES public.workspaces(id);

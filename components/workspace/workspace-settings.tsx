@@ -1,10 +1,12 @@
+"use client";
+
 import { ChatbotUIContext } from "@/context/context"
 import { WORKSPACE_INSTRUCTIONS_MAX } from "@/db/limits"
 import {
   getWorkspaceImageFromStorage,
   uploadWorkspaceImage
 } from "@/db/storage/workspace-images"
-import { updateWorkspace } from "@/db/workspaces"
+import { getWorkspaceById, updateWorkspace } from "@/db/workspaces"
 import { getTeamMembersQuery } from "@/db/members"
 import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 import { LLMID } from "@/types"
@@ -40,11 +42,14 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
     setWorkspaces,
     setChatSettings,
     workspaceImages,
-    setWorkspaceImages
+    setWorkspaceImages,
   } = useContext(ChatbotUIContext)
 
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [isOpen, setIsOpen] = useState(false)
+
+
+
 
   const [name, setName] = useState(selectedWorkspace?.name || "")
   const [imageLink, setImageLink] = useState("")
@@ -55,6 +60,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
   const [instructions, setInstructions] = useState(
     selectedWorkspace?.instructions || ""
   )
+  const [userProfile, setprofile] = useState(profile || "")
 
   const [defaultChatSettings, setDefaultChatSettings] = useState({
     model: selectedWorkspace?.default_model,
@@ -164,37 +170,6 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
   }
 
   if (!selectedWorkspace || !profile) return null
-
-  const [teamMembers, setTeamMembers] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchTeamMembersAndUser = async () => {
-      setLoading(true);
-      try {
-        // Assuming selectedWorkspace is available and contains the teamId
-        const teamId = selectedWorkspace?.team_id;
-        if (teamId) {
-          const teamMembersData = await getTeamMembersQuery(teamId);
-          setTeamMembers(teamMembersData);
-        }
-        // Assuming getCurrentUser is a function that fetches the current user's data
-        const currentUserData = await getCurrentUser();
-        setCurrentUser(currentUserData);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTeamMembersAndUser();
-  }, [selectedWorkspace]); // Re-run when selectedWorkspace changes
-
-
-
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -306,7 +281,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
             </TabsContent>
 
             <TabsContent value="members">
-              <Tabs>
+              <Tabs defaultValue="members">
               <TabsList className="bg-transparent border-b-[1px] w-full justify-start rounded-none mb-1 p-0 h-auto pb-4 mt-4">
                 <TabsTrigger value="members" className="p-0 m-0 mr-4">
                   Team Members
@@ -317,7 +292,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
               </TabsList>
 
               <TabsContent value="members">
-                <DataTable data={teamMembers?.data} currentUser={user?.data} />
+                <DataTable workspaceId={selectedWorkspace.id} currentUser={userProfile} />
               </TabsContent>
 
               <TabsContent value="pending">

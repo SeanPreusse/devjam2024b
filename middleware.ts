@@ -15,19 +15,19 @@ export async function middleware(request: NextRequest) {
     const redirectToChat = session && request.nextUrl.pathname === "/"
 
     if (redirectToChat) {
-      const { data: homeWorkspace, error } = await supabase
-        .from("workspaces")
+      const { data: profile, error } = await supabase
+        .from("profiles")
         .select("*")
         .eq("user_id", session.data.session?.user.id)
-        .eq("is_home", true)
         .single()
 
-      if (!homeWorkspace) {
+
+      if (!profile) {
         throw new Error(error?.message)
       }
 
       return NextResponse.redirect(
-        new URL(`/${homeWorkspace.id}/chat`, request.url)
+        new URL(`/${profile.home_workspace}/chat`, request.url)
       )
     }
 

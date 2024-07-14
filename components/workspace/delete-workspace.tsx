@@ -36,26 +36,24 @@ export const DeleteWorkspace: FC<DeleteWorkspaceProps> = ({
   const [name, setName] = useState("")
 
   const handleDeleteWorkspace = async () => {
-    await deleteWorkspace(workspace.id)
-
+    // First, unset the home workspace for all profiles associated with this workspace
+    // await unsetHomeWorkspaceForProfiles(workspace.id);
+  
+    // Then, proceed with deleting the workspace
+    await deleteWorkspace(workspace.id);
+  
     setWorkspaces(prevWorkspaces => {
-      const filteredWorkspaces = prevWorkspaces.filter(
-        w => w.id !== workspace.id
-      )
-
-      const defaultWorkspace = filteredWorkspaces[0]
-
-      setSelectedWorkspace(defaultWorkspace)
-      router.push(`/${defaultWorkspace.id}/chat`)
-
-      return filteredWorkspaces
-    })
-
-    setShowWorkspaceDialog(false)
-    onDelete()
-
-    handleNewChat()
-  }
+      const filteredWorkspaces = prevWorkspaces.filter(w => w.id !== workspace.id);
+      const defaultWorkspace = filteredWorkspaces[0];
+      setSelectedWorkspace(defaultWorkspace);
+      router.push(`/${defaultWorkspace.id}/chat`);
+      return filteredWorkspaces;
+    });
+  
+    setShowWorkspaceDialog(false);
+    onDelete();
+    handleNewChat();
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter") {

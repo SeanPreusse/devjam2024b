@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/popover"
 import { ChatbotUIContext } from "@/context/context"
 import { createWorkspace } from "@/db/workspaces"
+import { updateProfile } from "@/db/profile"
+
 import useHotkey from "@/lib/hooks/use-hotkey"
 import { IconBuilding, IconHome, IconPlus } from "@tabler/icons-react"
 import { ChevronsUpDown } from "lucide-react"
@@ -63,6 +65,16 @@ export const WorkspaceSwitcher: FC<WorkspaceSwitcherProps> = ({}) => {
       name: "New Workspace"
     })
 
+    try {
+      const updatedProfile = await updateProfile(selectedWorkspace.user_id, {
+        home_workspace: createdWorkspace.id
+      });
+  
+      console.log('Profile updated successfully:', updatedProfile);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+    
     setWorkspaces([...workspaces, createdWorkspace])
     setSelectedWorkspace(createdWorkspace)
     setOpen(false)
