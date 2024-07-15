@@ -26,7 +26,8 @@ export const DeleteWorkspace: FC<DeleteWorkspaceProps> = ({
   workspace,
   onDelete
 }) => {
-  const { setWorkspaces, setSelectedWorkspace, setProfile, profile } = useContext(ChatbotUIContext)
+  const { setWorkspaces, setSelectedWorkspace, profile } = useContext(ChatbotUIContext)
+
   const { handleNewChat } = useChatHandler()
   const router = useRouter()
 
@@ -44,14 +45,9 @@ export const DeleteWorkspace: FC<DeleteWorkspaceProps> = ({
       const defaultWorkspace = filteredWorkspaces[0];
       setSelectedWorkspace(defaultWorkspace);
 
-      // Ensure profile and user_id are available
-      if (profile && profile.user_id) {
-        const updatedProfile = { ...profile, home_workspace: defaultWorkspace.id };
-        updateProfile(profile.user_id, { home_workspace: defaultWorkspace.id });
-        setProfile(updatedProfile);
-      }
+      updateProfile(profile!.user_id, { home_workspace: defaultWorkspace.id });
 
-      router.push(`/${defaultWorkspace.id}/chat`);
+      router.push(`/${profile!.home_workspace}/chat`);
       return filteredWorkspaces;
     });
   

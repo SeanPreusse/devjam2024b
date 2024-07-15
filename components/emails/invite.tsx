@@ -19,11 +19,10 @@ import {
     email?: string;
     invitedByEmail?: string;
     invitedByName?: string;
-    teamName?: string;
+    workspaceName?: string;
     inviteCode?: string;
     ip?: string;
     location?: string;
-    locale: string;
   }
   
   const baseUrl =
@@ -40,11 +39,10 @@ import {
     invitedByEmail = "bukinoshita@example.com",
     invitedByName = "Pontus Abrahamsson",
     email = "pontus@lostisland.co",
-    teamName = "Acme Co",
+    workspaceName = "Acme Co",
     inviteCode = "jnwe9203frnwefl239jweflasn1230oqef",
     ip = "204.13.186.218",
-    location = "São Paulo, Brazil",
-    locale = "en",
+    location = "São Paulo, Brazil"
   }: InviteEmailProps) => {
     const inviteLink = `${baseAppUrl}/teams/invite/${inviteCode}`;
   
@@ -74,7 +72,7 @@ import {
               fontStyle="normal"
             />
           </head>
-          <Preview>{t("invite.preview", { teamName })}</Preview>
+          <Preview>{t("invite.preview", { workspaceName })}</Preview>
   
           <Body className="bg-[#fff] my-auto mx-auto font-sans">
             <Container
@@ -83,8 +81,8 @@ import {
             >
               {/* <Logo baseUrl={baseUrl} /> */}
               <Heading className="mx-0 my-[30px] p-0 text-[24px] font-normal text-[#121212] text-center">
-                {t("invite.title1")} <strong>{teamName}</strong>{" "}
-                {t("invite.title2")} <strong>Midday</strong>
+                {t("invite.title1")} <strong>{workspaceName}</strong>{" "}
+                {t("invite.title2")} <strong>VBR</strong>
               </Heading>
   
               <Text className="text-[14px] leading-[24px] text-[#121212]">
@@ -95,7 +93,7 @@ import {
                 >
                   {invitedByEmail}
                 </Link>
-                ) {t("invite.link1")} <strong>{teamName}</strong>{" "}
+                ) {t("invite.link1")} <strong>{workspaceName}</strong>{" "}
                 {t("invite.link2")} <strong>Midday</strong>.
               </Text>
               <Section className="mb-[42px] mt-[32px] text-center">

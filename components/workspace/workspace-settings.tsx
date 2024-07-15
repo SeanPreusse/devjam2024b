@@ -30,7 +30,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { TextareaAutosize } from "../ui/textarea-autosize"
 import { WithTooltip } from "../ui/with-tooltip"
 import { DeleteWorkspace } from "./delete-workspace"
-import { DataTable } from "@/components/workspace/workspace-members"
+import { MembersTable } from "@/components/workspace/members-table"
+import { PendingTable } from "@/components/workspace/pending-table"
+
 
 interface WorkspaceSettingsProps {}
 
@@ -292,11 +294,11 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
               </TabsList>
 
               <TabsContent value="members">
-                <DataTable workspaceId={selectedWorkspace.id} currentUser={userProfile} />
+                <MembersTable workspaceId={selectedWorkspace.id} currentUser={userProfile} />
               </TabsContent>
 
               <TabsContent value="pending">
-                {/* Content for Pending Invitations */}
+              <PendingTable workspaceId={selectedWorkspace.id} currentUser={userProfile} />
               </TabsContent>
               </Tabs>
             </TabsContent>

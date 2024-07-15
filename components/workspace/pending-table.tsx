@@ -272,7 +272,7 @@ export const columns: ColumnDef[] = [
   },
 ];
 
-export function DataTable({ workspaceId, currentUser }) {
+export function PendingTable({ workspaceId, currentUser }) {
   const [teamMembers, setTeamMembers] = useState([]);
   const [isOpen, onOpenChange] = useState(false);
 

@@ -49,34 +49,59 @@ export default async function Login({
 
   const signIn = async (formData: FormData) => {
     "use server"
-
+  
     const email = formData.get("email") as string
     const password = formData.get("password") as string
     const cookieStore = cookies()
     const supabase = createClient(cookieStore)
-
+  
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
-
+  
     if (error) {
       return redirect(`/login?message=${error.message}`)
     }
-
-    const { data: profile, error: profileError } = await supabase
+  
+    let { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", data.user.id)
       .single()
-
+  
     if (!profile) {
       throw new Error(
         profileError?.message || "An unexpected error occurred"
       )
     }
-    
-
+  
+    // Check if home_workspace is null and find the next available workspace
+    if (!profile.home_workspace) {
+      const { data: workspaces, error: workspacesError } = await supabase
+        .from("workspaces")
+        .select("*")
+        .eq("user_id", profile.user_id) // Assuming there's a user_id field to filter workspaces
+  
+      if (workspacesError || !workspaces || workspaces.length === 0) {
+        throw new Error(workspacesError?.message || "Failed to find workspaces for the user")
+      }
+  
+      const defaultWorkspace = workspaces[0] // Select the first workspace as default
+      profile.home_workspace = defaultWorkspace.id // Update the profile object locally for now
+  
+      // Update the profile in the database
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ home_workspace: defaultWorkspace.id })
+        .eq("user_id", profile.user_id)
+  
+      if (updateError) {
+        throw new Error(updateError.message)
+      }
+    }
+  
+    // Redirect to the chat of the home_workspace
     return redirect(`/${profile.home_workspace}/chat`)
   }
 
