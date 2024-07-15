@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { ChatbotUIContext } from "@/context/context"
 import { deleteWorkspace } from "@/db/workspaces"
+import { updateProfile } from "@/db/profile"
 import { Tables } from "@/supabase/types"
 import { FC, useContext, useRef, useState } from "react"
 import { Input } from "../ui/input"
@@ -25,7 +26,7 @@ export const DeleteWorkspace: FC<DeleteWorkspaceProps> = ({
   workspace,
   onDelete
 }) => {
-  const { setWorkspaces, setSelectedWorkspace } = useContext(ChatbotUIContext)
+  const { setWorkspaces, setSelectedWorkspace, setProfile, profile } = useContext(ChatbotUIContext)
   const { handleNewChat } = useChatHandler()
   const router = useRouter()
 
@@ -36,16 +37,20 @@ export const DeleteWorkspace: FC<DeleteWorkspaceProps> = ({
   const [name, setName] = useState("")
 
   const handleDeleteWorkspace = async () => {
-    // First, unset the home workspace for all profiles associated with this workspace
-    // await unsetHomeWorkspaceForProfiles(workspace.id);
-  
-    // Then, proceed with deleting the workspace
     await deleteWorkspace(workspace.id);
   
     setWorkspaces(prevWorkspaces => {
       const filteredWorkspaces = prevWorkspaces.filter(w => w.id !== workspace.id);
       const defaultWorkspace = filteredWorkspaces[0];
       setSelectedWorkspace(defaultWorkspace);
+
+      // Ensure profile and user_id are available
+      if (profile && profile.user_id) {
+        const updatedProfile = { ...profile, home_workspace: defaultWorkspace.id };
+        updateProfile(profile.user_id, { home_workspace: defaultWorkspace.id });
+        setProfile(updatedProfile);
+      }
+
       router.push(`/${defaultWorkspace.id}/chat`);
       return filteredWorkspaces;
     });
